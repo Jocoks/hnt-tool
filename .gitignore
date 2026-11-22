@@ -1,0 +1,6 @@
+*.apk
+*.dex
+build/
+out/
+.idea/
+*.iml

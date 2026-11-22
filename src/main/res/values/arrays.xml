@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- LSPosed 推荐的默认作用域：只需要主题管理器本体 -->
+    <string-array name="xposed_scope">
+        <item>com.hihonor.android.thememanager</item>
+    </string-array>
+</resources>

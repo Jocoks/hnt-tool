@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>HNT 工具</title>
+<style>
+  :root{
+    --green:#07C160; --green-d:#06AD56; --bg:#F5F6F7; --card:#FFFFFF;
+    --line:#E8E9EA; --text:#1A1A1A; --sub:#8A8F99;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,"HarmonyOS Sans SC","Noto Sans CJK SC",system-ui,sans-serif;}
+  body{padding-bottom:40px}
+  header{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid var(--line);
+    padding:14px 18px 12px}
+  header h1{margin:0;font-size:17px;font-weight:600;letter-spacing:.2px}
+  header p{margin:3px 0 0;font-size:12px;color:var(--sub)}
+  .card{background:var(--card);margin:12px;border-radius:14px;padding:14px;
+    border:1px solid var(--line);box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  .card h2{margin:0 0 12px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .card h2 i{font-style:normal;width:20px;height:20px;border-radius:10px;background:var(--green);
+    color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:600}
+  .dirs{display:flex;flex-wrap:wrap;margin-top:2px}
+.row{display:flex;align-items:center;gap:10px;margin:8px 0}
+  .row .grow{flex:1;min-width:0}
+  .name{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sub{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  button{font-family:inherit;border:none;border-radius:10px;padding:11px 14px;font-size:14px;
+    font-weight:500;cursor:pointer;transition:opacity .15s}
+  button:active{opacity:.72}
+  button:disabled{opacity:.4}
+  .pri{background:var(--green);color:#fff;width:100%;font-size:15px;padding:13px}
+  .pri:active{background:var(--green-d)}
+  .sec{background:#fff;color:#333;border:1px solid var(--line);font-size:13px;padding:9px 12px}
+  .mini{background:#F2F3F5;color:#333;font-size:12px;padding:8px 11px;border-radius:9px}
+  .info{margin:10px 0 2px;padding:10px 12px;background:#FAFAFA;border:1px solid #EFEFEF;
+    border-radius:10px;font-size:12px;line-height:1.75;color:#444;display:none}
+  .info b{color:#111;font-weight:600}
+  .kv{display:flex}
+  .kv span:first-child{width:76px;color:var(--sub);flex:none}
+  .kv span:last-child{word-break:break-all}
+  label{display:block;font-size:12px;color:var(--sub);margin:10px 0 4px}
+  input{width:100%;font-family:inherit;font-size:13px;padding:10px 12px;border:1px solid var(--line);
+    border-radius:10px;background:#FAFAFA;color:#111;outline:none}
+  input:focus{border-color:var(--green);background:#fff}
+  .hint{font-size:11.5px;color:var(--sub);line-height:1.7;margin:2px 0 10px}
+  .bar{height:4px;background:#EDEEF0;border-radius:2px;overflow:hidden;margin:10px 0 4px;display:none}
+  .bar>div{height:100%;width:0;background:var(--green);transition:width .2s}
+  .barTxt{font-size:11.5px;color:var(--sub);display:none}
+  .keys{margin-top:6px}
+  .key{display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid #F3F3F3;font-size:12px}
+  .key:first-child{border-top:none}
+  .key .kid{font-weight:600;flex:none}
+  .key .kh{flex:1;min-width:0;color:#666;font-family:ui-monospace,monospace;font-size:11px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .key .del{color:#E5484D;font-size:11px;padding:4px 6px}
+  .logbox{margin:12px;border-radius:14px;border:1px solid var(--line);background:#fff;overflow:hidden}
+  .logbox .hd{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 14px;border-bottom:1px solid #F2F2F2;font-size:12px;color:var(--sub)}
+  .logbox pre{margin:0;padding:12px 14px;font-family:ui-monospace,monospace;font-size:11px;
+    line-height:1.65;color:#333;max-height:34vh;overflow:auto;white-space:pre-wrap;word-break:break-all}
+  .logbox pre .e{color:#D93036}
+  .logbox pre .ok{color:var(--green)}
+  .mask{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;
+    justify-content:center;padding:24px;z-index:20}
+  .mask.show{display:flex}
+  .dlg{background:#fff;border-radius:16px;padding:18px;width:100%;max-width:340px}
+  .dlg h3{margin:0 0 4px;font-size:15px}
+  .dlg p{margin:0 0 12px;font-size:12px;color:var(--sub);line-height:1.6}
+  .dlg .btns{display:flex;gap:10px;margin-top:14px}
+  .dlg .btns button{flex:1}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>荣耀主题包 .hnt 工具</h1>
+  <p id="envLine">拆包成文件夹 · 文件夹打包回 .hnt</p>
+</header>
+
+<div class="card" id="fsCard" style="display:none">
+  <div class="hint" style="margin:0">首次使用需要「所有文件访问权限」，用来直接读写 /storage/emulated/0/Download/HNT/。</div>
+  <button class="pri" style="margin-top:10px" onclick="HNT.requestFs()">去开启权限</button>
+</div>
+
+<div class="card">
+  <h2><i>1</i>拆包 .hnt</h2>
+  <div class="row">
+    <button class="sec" onclick="pickHnt()">选择 .hnt</button>
+    <div class="grow"><div class="name" id="hntName">未选择文件</div>
+      <div class="sub" id="hntSub">从主题包里挑一个 .hnt</div></div>
+  </div>
+  <div class="info" id="hntInfo"></div>
+  <div style="margin-top:10px">
+    <div class="sub" style="font-size:12px">输出目录（固定）</div>
+    <div class="name" style="color:var(--green);font-family:monospace;font-size:12.5px">/storage/emulated/0/Download/HNT/</div>
+    <div class="sub" style="margin-top:2px">直接写文件，不弹文件管理器</div>
+  </div>
+  <div class="bar" id="bar1"><div></div></div>
+  <div class="barTxt" id="barTxt1"></div>
+  <button class="pri" id="btnUnpack" style="margin-top:12px" disabled onclick="doUnpack()">开始拆包</button>
+</div>
+
+<div class="card">
+  <h2><i>2</i>文件夹打包成 .hnt</h2>
+  <div class="row">
+    <div class="grow"><div class="name" id="srcName">未选择</div>
+      <div class="sub" id="srcSub">从 /storage/emulated/0/Download/HNT/ 里选一个文件夹</div></div>
+  </div>
+  <div class="dirs" id="dirList"></div>
+  <label>hitopId（主题包 ID，必须与原包一致）</label>
+  <input id="inId" placeholder="例如 101113191" autocapitalize="off" autocorrect="off">
+  <label>version</label>
+  <input id="inVer" placeholder="8.0.1" value="8.0.1">
+  <div class="hint">打包需要该 hitopId 的 16 字节密钥（见下方第 3 块）。生成的 .hnt 直接存到 /storage/emulated/0/Download/HNT/。</div>
+  <div class="bar" id="bar2"><div></div></div>
+  <div class="barTxt" id="barTxt2"></div>
+  <button class="pri" id="btnPack" style="margin-top:4px" disabled onclick="doPack()">打包并保存 .hnt</button>
+</div>
+
+<div class="card">
+  <h2><i>3</i>密钥</h2>
+  <div class="hint">每个主题包用一把 16 字节密钥（按 hitopId 存在主题管理器的 AndroidKeyStore 里）。
+    装好 LSPosed 模块（作用域勾主题管理器）后点下面的按钮，让主题管理器自己算；不想装模块也可以手动输入。</div>
+  <div class="row">
+    <button class="sec" onclick="autoKey()">让主题管理器算（免 root）</button>
+    <button class="sec" onclick="askKey('')">手动输入</button>
+  </div>
+  <div class="keys" id="keyList"></div>
+</div>
+
+<div class="logbox">
+  <div class="hd"><span>日志</span><span id="stamp">就绪</span></div>
+  <pre id="log">—</pre>
+</div>
+
+<div class="mask" id="mask">
+  <div class="dlg">
+    <h3 id="dlgTitle">输入密钥</h3>
+    <p id="dlgDesc">16 字节密钥的 32 位十六进制（也接受 24/32 字节）。</p>
+    <input id="dlgKey" placeholder="2ecd7dac706b0da1a62bcc2acff0b30e" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <div class="btns">
+      <button class="sec" onclick="closeKey()">取消</button>
+      <button class="pri" style="width:auto;padding:11px 16px;font-size:14px" onclick="saveKey()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+var S = { hnt:null, info:null, out:null, src:null, keys:{}, dialogId:"" };
+
+function $(id){ return document.getElementById(id); }
+
+function call(name){
+  var a = Array.prototype.slice.call(arguments,1);
+  try{ return HNT[name].apply(HNT, a); }catch(e){ log("调用失败：" + e, 1); }
+}
+
+function log(msg, cls){
+  var el = $("log");
+  if(el.textContent === "—") el.textContent = "";
+  var line = document.createElement("div");
+  if(cls === 1) line.className = "e";
+  if(cls === 2) line.className = "ok";
+  line.textContent = "[" + new Date().toTimeString().slice(0,8) + "] " + msg;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+  $("stamp").textContent = msg.length > 18 ? msg.slice(0,18) + "…" : msg;
+}
+
+function fmtSize(n){
+  if(n < 1024) return n + " B";
+  if(n < 1048576) return (n/1024).toFixed(1) + " KB";
+  return (n/1048576).toFixed(2) + " MB";
+}
+
+function refreshButtons(){
+  $("btnUnpack").disabled = !S.hnt;
+  $("btnPack").disabled = !S.src;
+}
+
+/* ---------- 选择 ---------- */
+function pickHnt(){ call("pickHnt"); }
+function loadDirs(){
+  try { renderDirs(JSON.parse(call("listDirs"))); } catch(e){}
+}
+function renderDirs(a){
+  var box = $("dirList");
+  if(!a || !a.length){ box.innerHTML = '<div class="sub" style="margin:6px 0">/storage/emulated/0/Download/HNT/ 里还没有文件夹，先拆一个 .hnt</div>'; return; }
+  box.innerHTML = a.map(function(n){
+    return '<button class="sec" style="margin:6px 8px 0 0" onclick="chooseDir(\'' + n.replace(/'/g,"") + '\')">' + n + '</button>';
+  }).join("");
+}
+function chooseDir(n){ call("setSrc", n); }
+
+/* ---------- 动作 ---------- */
+function doUnpack(){
+  if(!S.hnt) return;
+  if(!S.info.hasKey){
+    askKey(S.info.hitopId, "拆包前需要密钥");
+    return;
+  }
+  $("bar1").style.display = "block";
+  log("开始拆包 " + S.hnt.name);
+  call("unpack");
+}
+
+function doPack(){
+  var id = $("inId").value.trim();
+  var ver = $("inVer").value.trim() || "8.0.1";
+  if(!id){ log("请先填写 hitopId", 1); return; }
+  if(!S.keys[id]){
+    askKey(id, "这个 hitopId 还没有密钥");
+    return;
+  }
+  $("bar2").style.display = "block";
+  call("pack", id, ver);
+}
+
+function autoKey(){
+  var id = S.info ? S.info.hitopId : $("inId").value.trim();
+  if(!id){ log("先选一个 .hnt 或填写 hitopId", 1); return; }
+  log("请求主题管理器算密钥 " + id + " …");
+  call("autoKey", id);
+}
+
+/* ---------- 密钥弹窗 ---------- */
+function askKey(id, desc){
+  S.dialogId = id || "";
+  $("dlgTitle").textContent = id ? "密钥：" + id : "输入密钥";
+  $("dlgDesc").textContent = (desc ? desc + "。" : "")
+    + "16 字节密钥的 32 位十六进制（也接受 24/32 字节）。"
+    + (S.info && S.info.hitopId === id ? "\n提示：可以先点「让主题管理器算（免 root）」。" : "");
+  $("dlgKey").value = "";
+  $("mask").classList.add("show");
+  setTimeout(function(){ $("dlgKey").focus(); }, 80);
+}
+
+function closeKey(){
+  $("mask").classList.remove("show");
+}
+
+function saveKey(){
+  var id = S.dialogId || (S.info ? S.info.hitopId : "");
+  var hex = $("dlgKey").value.trim();
+  if(!id){ log("没有可关联的 hitopId", 1); return; }
+  if(!call("setKey", id, hex)){ log("密钥格式不对（需要 32/48/64 位十六进制）", 1); return; }
+  log("已保存密钥 " + id, 2);
+  closeKey();
+  if(S.info) S.info.hasKey = true;
+  refreshKeys();
+  loadDirs();
+  refreshButtons();
+}
+
+function refreshKeys(){
+  var box = $("keyList");
+  box.innerHTML = "";
+  var ids = Object.keys(S.keys || {});
+  if(!ids.length){
+    box.innerHTML = '<div class="sub" style="padding:6px 0">还没有保存的密钥</div>';
+    return;
+  }
+  ids.sort();
+  ids.forEach(function(id){
+    var row = document.createElement("div");
+    row.className = "key";
+    var a = document.createElement("span");
+    a.className = "kid"; a.textContent = id;
+    var b = document.createElement("span");
+    b.className = "kh"; b.textContent = S.keys[id];
+    var c = document.createElement("span");
+    c.className = "del"; c.textContent = "删除";
+    c.onclick = function(){
+      if(confirm("删除 " + id + " 的密钥？")){
+        call("delKey", id); delete S.keys[id]; refreshKeys();
+        if(S.info && S.info.hitopId === id) S.info.hasKey = false;
+      }
+    };
+    row.appendChild(a); row.appendChild(b); row.appendChild(c);
+    box.appendChild(row);
+  });
+}
+
+/* ---------- Java 回调 ---------- */
+window.HntUI = {
+  on: function(ev){
+    var t = ev.t;
+    if(t === "log"){
+      log(ev.msg);
+    } else if(t === "err"){
+      log(ev.msg, 1);
+      $("bar1").style.display = "none"; $("bar2").style.display = "none";
+      $("barTxt1").style.display = "none"; $("barTxt2").style.display = "none";
+    } else if(t === "hnt"){
+      S.hnt = ev; S.info = ev;
+      $("hntName").textContent = ev.name;
+      $("hntSub").textContent = fmtSize(ev.size) + " · " + (ev.hitopId || "无 hitopId");
+      var box = $("hntInfo");
+      box.style.display = "block";
+      box.innerHTML = "";
+      addKV(box, "hitopId", ev.hitopId || "（空）");
+      addKV(box, "version", ev.version || "（空）");
+      addKV(box, "大小", fmtSize(ev.size) + "（" + ev.size + "）");
+      addKV(box, "JSON/密文", ev.jsonLen + " / " + ev.encLen + " 字节");
+      addKV(box, "尾部校验", ev.hashOk ? "✓ 与 sha256 一致" : "✗ 不一致（文件可能被改过）");
+      addKV(box, "密钥", ev.hasKey ? "✓ 已有" : "✗ 还需要提取/输入", "kvKey");
+      if(!$("inId").value && ev.hitopId) $("inId").value = ev.hitopId;
+      if(ev.version) $("inVer").value = ev.version;
+      log("已读取 " + ev.name + "，" + fmtSize(ev.size), 2);
+      refreshButtons();
+    } else if(t === "outdir"){
+      S.out = ev; $("outName").textContent = ev.name;
+      log("输出目录：" + ev.name);
+      refreshButtons();
+    } else if(t === "srcdir"){
+      S.src = ev; $("srcName").textContent = ev.name;
+      $("srcSub").textContent = "共 " + ev.count + " 个文件";
+      log("打包源：" + ev.name + "，" + ev.count + " 个文件");
+      refreshButtons();
+    } else if(t === "progress"){
+      if(ev.phase === "unzip"){
+        $("barTxt1").style.display = "block";
+        $("barTxt1").textContent = "已解出 " + ev.done + " 项…";
+      } else {
+        var p = ev.total > 0 ? Math.round(ev.done * 100 / ev.total) : 0;
+        $("bar2").firstElementChild.style.width = p + "%";
+        $("barTxt2").style.display = "block";
+        $("barTxt2").textContent = "压缩中 " + ev.done + "/" + ev.total + "（" + p + "%）";
+      }
+    } else if(t === "done"){
+      loadDirs();
+      $("bar1").firstElementChild.style.width = "100%";
+      $("barTxt1").style.display = "block";
+      $("barTxt1").textContent = "完成：共 " + ev.count + " 项，用时 " + (ev.ms/1000).toFixed(1) + " 秒";
+      log("拆包完成：" + ev.count + " 项 → " + ev.dir + "/", 2);
+      setTimeout(function(){ $("bar1").style.display = "none"; }, 1200);
+    } else if(t === "packed"){
+      $("barTxt2").style.display = "block";
+      $("barTxt2").textContent = "已生成 " + fmtSize(ev.size);
+      log("打包完成：" + fmtSize(ev.size) + "，" + ev.files + " 个文件，尾部校验 " +
+          (ev.hashOk ? "✓" : "✗"), 2);
+      setTimeout(function(){ $("bar2").style.display = "none"; $("bar2").firstElementChild.style.width = "0"; }, 1500);
+    } else if(t === "key"){
+      S.keys = ev.keys || S.keys;
+      log("已提取密钥 " + ev.hitopId + "：" + ev.hex, 2);
+      refreshKeys();
+      if(S.info) S.info.hasKey = true;
+      refreshButtons();
+    } else if(t === "keyinfo"){
+      if(S.info){
+        S.info.hasKey = !!ev.hasKey;
+        var el = $("kvKey");
+        if(el) el.textContent = ev.hasKey ? "✓ 已有" : "✗ 还需要提取/输入";
+      }
+      refreshButtons();
+    } else if(t === "keys"){
+      S.keys = ev.keys || {};
+      refreshKeys();
+    } else if(t === "needkey"){
+      askKey(ev.hitopId, "这个主题包还没有密钥，先提取或手动输入");
+      log("缺少密钥：" + ev.hitopId, 1);
+    } else if(t === "selftest"){
+      log(ev.ok ? ("加解密自检通过（" + ev.size + " 字节）") : "加解密自检失败", ev.ok ? 2 : 1);
+    } else if(t === "cancel"){
+      log("已取消选择");
+    }
+  }
+};
+
+function addKV(box, k, v, id){
+  var d = document.createElement("div");
+  d.className = "kv";
+  var a = document.createElement("span"); a.textContent = k;
+  var b = document.createElement("span"); b.textContent = v;
+  if(id) b.id = id;
+  d.appendChild(a); d.appendChild(b);
+  box.appendChild(d);
+}
+
+(function init(){
+  var env = null;
+  try{ env = JSON.parse(HNT.env()); }catch(e){}
+  if(env){
+    S.keys = env.keys || {};
+    $("envLine").textContent = "Android " + env.sdk + " · 拆包成文件夹 · 打包回 .hnt";
+    if(env.themeInstalled === false) log("未检测到荣耀主题管理器，自动取密钥不可用", 1);
+    if(env.fs === false) $("fsCard").style.display = "block";
+  } else {
+    $("envLine").textContent = "初始化失败：页面桥未连接";
+  }
+  refreshKeys();
+  loadDirs();
+  refreshButtons();
+  log("就绪。选择 .hnt 开始。", 2);
+})();
+</script>
+</body>
+</html>
